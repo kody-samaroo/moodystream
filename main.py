@@ -23,7 +23,7 @@ def get_top_tracks(limit=5, time_range='short_term'):
         print(f"{i + 1}. {track['name']} — {track['artists'][0]['name']}")
     return tracks
 
-top_tracks = get_top_tracks()
+# top_tracks = get_top_tracks()
 
 # Fetch top artists
 def get_top_artists(limit=10, time_range='short_term'):
@@ -38,4 +38,24 @@ def get_top_artists(limit=10, time_range='short_term'):
 
     return artists[:3] 
 
-top_artists = get_top_artists()
+# top_artists = get_top_artists()
+
+# Search tracks for a given genre
+def search_tracks_by_genre(genre, limit=20):
+    query = f'genre:"{genre}"gi'
+    results = sp.search(q=query, limit=10, type='track')
+    tracks = results['tracks']['items']
+    track_uris = [track['uri'] for track in tracks]
+    print(f"Found {len(track_uris)} tracks for genre: {genre}")
+    for i, track_uri in enumerate(track_uris):
+        print(track_uri)
+
+    return track_uris
+
+# tracks_by_genre = search_tracks_by_genre()
+
+artists = get_top_artists()
+
+for artist in artists:
+    genre = artist['genres'][0]
+    tracks = search_tracks_by_genre(genre)
