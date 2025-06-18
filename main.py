@@ -54,8 +54,36 @@ def search_tracks_by_genre(genre, limit=20):
 
 # tracks_by_genre = search_tracks_by_genre()
 
+
+# TESTING search_tracks_by_genre() function
 artists = get_top_artists()
 
 for artist in artists:
     genre = artist['genres'][0]
     tracks = search_tracks_by_genre(genre)
+
+def create_genre_playlist(user_id, genre, track_uris):
+    playlist_title = f"Your Vibe: {genre}"
+    playlist = sp.user_playlist_create(
+        user=user_id, 
+        name=playlist_title.capitalize(), 
+        public=True, 
+        description="Generated from your top artists' genres"
+    )
+    playlist_id = playlist["id"]
+    sp.playlist_add_items(playlist_id=playlist_id, items=track_uris)
+
+    return playlist_id
+
+# TESTING create_genre_playlist() function
+user_id = sp.current_user()["id"]
+print(f"User ID: {user_id}")
+
+genre = "Rap"
+sample_tracks = [
+"spotify:track:6PGoSes0D9eUDeeAafB2As",
+"spotify:track:4iZ4pt7kvcaH6Yo8UoZ4s2",
+"spotify:track:6LxSe8YmdPxy095Ux6znaQ"
+]
+
+create_genre_playlist(user_id, genre, sample_tracks)
