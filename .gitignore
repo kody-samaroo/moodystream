@@ -3,6 +3,7 @@ env/
 .venv/
 
 # Ignore cache
+__pycache__/
 .cache
 
 # Ignore environment variables
