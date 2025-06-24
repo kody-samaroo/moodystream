@@ -22,4 +22,20 @@ MoodyStream is a serverless Python app that creates 3 personalized Spotify playl
 | **API Gateway** | (Planned) HTTP endpoint to trigger playlist creation |
 
 ## 📦 Folder Structure
+moodyStream/
+├── lambda_function.py
+├── requirements.txt
+├── package/ # Spotipy + dependencies
+└── lambda.zip # Final deployment bundle
 
+## 🛠 Setup Instructions
+
+1. Clone the repo and create a virtual environment
+2. Install dependencies:  
+   `pip install -r requirements.txt`
+3. Zip dependencies and the handler script for Lambda:
+   ```bash
+   cd package
+   zip -r ../lambda.zip .
+   cd ..
+   zip -g lambda.zip lambda_function.py
