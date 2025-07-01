@@ -18,7 +18,7 @@ def main():
     artists = get_top_artists(limit=5)
     playlist_ids = create_genre_playlists_from_top_artists(user_id, artists)
     
-    print("\n🎉 Done! Created the following playlists:")
+    print("\n Done! Created the following playlists:")
     for pid in playlist_ids:
         print(f"https://open.spotify.com/playlist/{pid}")
 
