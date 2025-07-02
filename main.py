@@ -2,16 +2,33 @@ from dotenv import load_dotenv
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from server import run_app, get_token
+import time
+import threading
+
 
 load_dotenv()
 
+threading.Thread(target=run_app).start()
+print("Visit http://127.0.0.1:8888/login in your browser to authenticate...")
+
+# Wait for login
+access_token = None
+while not access_token:
+    print("Fetching token...")
+    time.sleep(1)
+    access_token = get_token()
+
+# Use token to initialize Spotipy
+sp = spotipy.Spotify(auth=access_token)
+
 # Authenticate
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-    client_id = os.getenv("SPOTIPY_CLIENT_ID"),
-    client_secret = os.getenv("SPOTIPY_CLIENT_SECRET"),
-    redirect_uri = os.getenv("SPOTIPY_REDIRECT_URI"),
-    scope = os.getenv("SCOPE")
-))
+# sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+#     client_id = os.getenv("SPOTIPY_CLIENT_ID"),
+#     client_secret = os.getenv("SPOTIPY_CLIENT_SECRET"),
+#     redirect_uri = os.getenv("SPOTIPY_REDIRECT_URI"),
+#     scope = os.getenv("SCOPE")
+# ))
 
 def main():
     user_id = sp.current_user()["id"]
