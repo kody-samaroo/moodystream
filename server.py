@@ -4,6 +4,8 @@ import webbrowser
 import threading
 from flask import Flask, request
 from dotenv import load_dotenv
+import boto3
+import json
 
 load_dotenv()
 
@@ -69,6 +71,12 @@ def get_token():
     else:
         print(f"Missing access token in the tokens dictionary.")
         return None
+    
+def get_secrets():
+    client = boto3.client("secretsmanager")
+    response = client.get_secret_value(SecretId="moodystream/spotify")
+    secret_dict = json.loads(response["SecretString"])
+    return secret_dict
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
