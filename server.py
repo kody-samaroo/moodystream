@@ -1,10 +1,10 @@
+import boto3
 import os
 import requests
 import webbrowser
 import threading
 from flask import Flask, request
 from dotenv import load_dotenv
-import boto3
 import json
 
 load_dotenv()
@@ -12,8 +12,23 @@ load_dotenv()
 app = Flask(__name__)
 tokens = {}
 
-CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
-CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
+def get_secrets():
+    client = boto3.client("secretsmanager")
+    response = client.get_secret_value(SecretId="moodystream/spotify")
+    secret_dict = json.loads(response["SecretString"])
+    return secret_dict
+
+secrets = get_secrets()
+
+# .env files
+# CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
+# CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
+
+# AWS secrets
+CLIENT_ID = secrets["SPOTIPY_CLIENT_ID"]
+CLIENT_SECRET = secrets["SPOTIPY_CLIENT_SECRET"]
+
+# Redirect URI & Scope
 REDIRECT_URI = os.getenv("SPOTIPY_REDIRECT_URI")
 SCOPE = os.getenv("SCOPE")
 
@@ -71,12 +86,6 @@ def get_token():
     else:
         print(f"Missing access token in the tokens dictionary.")
         return None
-    
-def get_secrets():
-    client = boto3.client("secretsmanager")
-    response = client.get_secret_value(SecretId="moodystream/spotify")
-    secret_dict = json.loads(response["SecretString"])
-    return secret_dict
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
