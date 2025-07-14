@@ -39,3 +39,8 @@ moodyStream/
    zip -r ../lambda.zip .
    cd ..
    zip -g lambda.zip lambda_function.py
+
+## Imported Packages
+1. Boto3 - AWS SDK for Python to create, configure, and manage AWS services, such as AWS Secrets Manager and S3.
+2. Spotipy - Python library for Spotify Web API.
+3. 

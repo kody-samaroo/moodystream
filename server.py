@@ -3,15 +3,14 @@ import os
 import requests
 import webbrowser
 import threading
-from flask import Flask, request
-from dotenv import load_dotenv
+from flask import Flask, request, redirect
 import json
-
-load_dotenv()
+import spotipy
 
 app = Flask(__name__)
 tokens = {}
 
+# Fetches Client ID and secret from AWS Secrets Manager
 def get_secrets():
     client = boto3.client("secretsmanager")
     response = client.get_secret_value(SecretId="moodystream/spotify")
@@ -19,22 +18,17 @@ def get_secrets():
     return secret_dict
 
 secrets = get_secrets()
-
-# .env files
-# CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
-# CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
-
+    
 # AWS secrets
 CLIENT_ID = secrets["SPOTIPY_CLIENT_ID"]
 CLIENT_SECRET = secrets["SPOTIPY_CLIENT_SECRET"]
-
-# Redirect URI & Scope
-REDIRECT_URI = os.getenv("SPOTIPY_REDIRECT_URI")
-SCOPE = os.getenv("SCOPE")
+REDIRECT_URI = secrets["SPOTIPY_REDIRECT_URI"]
+SCOPE = "user-top-read playlist-modify-public"
 
 
 @app.route("/login")
 def login():
+
     auth_url = (
     "https://accounts.spotify.com/authorize"
     f"?client_id={CLIENT_ID}"
@@ -47,11 +41,15 @@ def login():
 
     webbrowser.open(auth_url)
 
-    return ("Redirecting to Spotify...")
+    return redirect(auth_url)
 
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
+
+    print("🔁 Query string:", request.query_string)
+    print("🔍 All args:", request.args)
+
 
     if not code:
         return "Authorization failed: No code received"
@@ -70,6 +68,18 @@ def callback():
     if "access_token" in token_data:
         tokens["access_token"] = token_data["access_token"]
         tokens["refresh_token"] = token_data["refresh_token"]
+
+        access_token = tokens["access_token"]
+        print("✅ Access Token:", access_token)
+
+        # 🎧 Step 2: Use Spotipy to access user's profile
+        sp = spotipy.Spotify(auth=access_token)
+        user_id = sp.current_user()["id"]
+        print("👤 User ID:", user_id)
+
+        # 🛠️ Step 3: Create a playlist
+        sp.user_playlist_create(user=user_id, name="Lambda Test", public=True)
+        print("🎉 Playlist created successfully!")
 
         print("Access Token:", tokens["access_token"])
         print("Refresh Token:", tokens["refresh_token"])
@@ -97,4 +107,4 @@ def run_app():
 
 if __name__ == "__main__":
     threading.Thread(target=run_app).start()
-    webbrowser.open("http://127.0.0.1:8888/callback")
+    webbrowser.open(REDIRECT_URI)
