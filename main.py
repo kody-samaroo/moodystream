@@ -41,7 +41,7 @@ def main():
 
     playlist = create_playlist(user_id, tracks)
 
-    print("\n Done! Created the following playlists:")
+    print("\n Done! Created the following playlist:")
     print(f"https://open.spotify.com/playlist/{playlist['id']}")
 
 # HELPER FUNCTIONS
