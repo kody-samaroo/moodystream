@@ -6,7 +6,6 @@ from server import run_app, get_token
 import time
 import threading
 
-
 load_dotenv()
 
 threading.Thread(target=run_app).start()
@@ -32,64 +31,47 @@ sp = spotipy.Spotify(auth=access_token)
 
 def main():
     user_id = sp.current_user()["id"]
-    artists = get_top_artists(limit=5)
-    playlist_ids = create_genre_playlists_from_top_artists(user_id, artists)
-    
-    print("\n Done! Created the following playlists:")
-    for pid in playlist_ids:
-        print(f"https://open.spotify.com/playlist/{pid}")
+    artists = get_top_artists()
+    tracks = []
 
-# Helper function
-# Fetch the current user's top artists
-def get_top_artists(limit=10, time_range='short_term'):
+    for i, artist in enumerate(artists):
+        artist_id = artist['id']
+        tracks.append(get_artist_top_track(artist_id))
+        tracks.append(get_artist_less_popular_track(artist_id))
+
+    playlist = create_playlist(user_id, tracks)
+
+    print("\n Done! Created the following playlists:")
+    print(f"https://open.spotify.com/playlist/{playlist['id']}")
+
+# HELPER FUNCTIONS
+def get_top_artists(limit=8, time_range='medium_term'):
     results = sp.current_user_top_artists(limit=limit, time_range=time_range)
     artists = []
-    
-    print("\n Top Artists and Their Genres:\n")
     for i, artist in enumerate(results['items']):
-        if artist['genres']:  # Only include artists with at least 1 genre
+        if artist['name']:
             artists.append(artist)
 
-    return artists[:3] 
+    return artists[:8]
 
-# Helper function
-# Queries for a list of tracks based of genre
-def search_tracks_by_genre(genre, limit=10):
-    query = f'genre:"{genre}"'
-    results = sp.search(q=query, limit=10, type='track')
-    tracks = results['tracks']['items']
-    track_uris = [track['uri'] for track in tracks]
+def get_artist_top_track(artist_id):
+    results = sp.artist_top_tracks(artist_id=artist_id, country='US')
+    tracks = results['tracks']
+    tracks.sort(reverse=True, key=lambda track: track['popularity'])
 
-    return track_uris
+    return tracks[0]['uri']
 
-def create_genre_playlist(user_id, genre, track_uris):
-    playlist_title = f"Your Vibe: {genre.capitalize()}"
-    playlist = sp.user_playlist_create(
-        user=user_id, 
-        name=playlist_title, 
-        public=True, 
-        description="Generated from your top artists' genres"
-    )
-    playlist_id = playlist["id"]
-    sp.playlist_add_items(playlist_id=playlist_id, items=track_uris)
+def get_artist_less_popular_track(artist_id):
+    results = sp.artist_top_tracks(artist_id=artist_id, country='US')
+    tracks = results['tracks']
+    tracks.sort(key=lambda track: track['popularity'])
 
-    return playlist_id
+    return tracks[0]['uri']
 
-def create_genre_playlists_from_top_artists(user_id, artists):
-    playlist_ids = []
-    
-    for i, artist in enumerate(artists):
-        if artist['genres']:  # Only include artists with at least 1 genre
-            genre = artist['genres'][0]
-            results = search_tracks_by_genre(genre=genre, limit=20)
-        if results:
-            playlist_id = create_genre_playlist(
-                user_id=user_id, 
-                genre=genre, 
-                track_uris=results
-            )
-            playlist_ids.append(playlist_id)
+def create_playlist(user, tracks):
+    playlist = sp.user_playlist_create(user=user, name="A Personal Vibe", public=True, description="Playist made with an automated app. Thanks")
+    sp.user_playlist_add_tracks(user=user, playlist_id=playlist['id'], tracks=tracks, position=None)
 
-    return playlist_ids
+    return playlist
 
 main()
