@@ -38,8 +38,6 @@ def login():
 
     print("Redirect URI being sent:", REDIRECT_URI)
 
-    webbrowser.open(auth_url)
-
     return redirect(auth_url)
 
 @app.route("/callback")

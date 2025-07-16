@@ -1,46 +1,113 @@
-# 🎧 MoodyStream
+# MoodyStream: Spotify Playlist Generator on AWS Lambda
 
-MoodyStream is a serverless Python app that creates 3 personalized Spotify playlists based on your top artists’ genres — each designed to deliver a distinct mood or vibe.
+## Overview
 
-## 🚀 What It Does
+MoodyStream is a cloud-native web application that generates Spotify playlists based on a user’s favorite artists. It demonstrates:
 
-- Analyzes your top 3 artists on Spotify
-- Extracts their primary genres
-- Searches for tracks within those genres
-- Generates 3 public playlists in your Spotify account
+- Serverless architecture with AWS Lambda and API Gateway  
+- Spotify OAuth 2.0 Authorization Code Flow  
+- Secure credential storage using AWS Secrets Manager  
+- Python application packaging for cloud deployment  
 
-## 🧰 Tech Stack
+---
 
-| Tool | Purpose |
-|------|---------|
-| **AWS Lambda** | Runs the playlist generation logic |
-| **Spotify Web API** | Gets user data and creates playlists |
-| **Spotipy** | Python wrapper for the Spotify API |
-| **Python 3.12** | Core runtime |
-| **AWS CLI** | Deployment and configuration |
-| **AWS Secrets Manager** | (Coming Soon) Securely store Spotify credentials |
-| **API Gateway** | (Planned) HTTP endpoint to trigger playlist creation |
+## Architecture Diagram
 
-## 📦 Folder Structure
-moodyStream/
-├── lambda_function.py
-├── requirements.txt
-├── package/ # Spotipy + dependencies
-└── lambda.zip # Final deployment bundle
+![alt text](image.png)
+_User → API Gateway → Lambda Function → Spotify API / AWS Secrets Manager_
 
-## 🛠 Setup Instructions
 
-1. Clone the repo and create a virtual environment
-2. Install dependencies:  
-   `pip install -r requirements.txt`
-3. Zip dependencies and the handler script for Lambda:
-   ```bash
-   cd package
-   zip -r ../lambda.zip .
-   cd ..
-   zip -g lambda.zip lambda_function.py
 
-## Imported Packages
-1. Boto3 - AWS SDK for Python to create, configure, and manage AWS services, such as AWS Secrets Manager and S3.
-2. Spotipy - Python library for Spotify Web API.
-3. 
+---
+
+## Technologies & Services Used
+
+- **AWS Lambda**
+- **AWS API Gateway**
+- **AWS Secrets Manager**
+- **IAM (Role-Based Access Control)**
+- **Python 3.12**
+- **Flask**
+- **Spotipy**
+- **Mangum**
+
+---
+
+## Features
+
+- Authenticate via Spotify using OAuth 2.0  
+- Generate playlists using:  
+  - Top tracks from user’s favorite artists  
+  - As well as less popular tracks from those same artists  
+- Store credentials securely in AWS Secrets Manager  
+- Serverless
+
+---
+
+## Setup Instructions
+
+### Local
+
+
+Clone the repository:
+```bash
+git clone https://github.com/your-username/moodystream.git
+cd moodystream
+```
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Copy secrets into `.ENV` file:
+```env
+SPOTIPY_CLIENT_ID=your_client_id
+SPOTIPY_CLIENT_SECRET=your_client_secret
+SPOTIPY_REDIRECT_URI=http://127.0.0.1:8888/callback
+SCOPE=user-top-read playlist-modify-public
+```
+
+Run application:
+```
+python main.py
+```
+
+### Cloud (AWS Lambda)
+
+##### Step 1: Upload Secrets to AWS Secrets Manager
+Secret Name: `moodystream/spotify`
+
+Keys:
+
+- `SPOTIPY_CLIENT_ID`
+- `SPOTIPY_CLIENT_SECRET`
+- `SPOTIPY_REDIRECT_URI`
+
+##### Step 2: Package and Deploy
+
+Install Python packages locally:
+```
+pip install -r requirements.txt -t ./package
+```
+
+Package your app:
+```
+cd package
+zip -r9 ../lambda_function.zip .
+```
+
+Upload `lambda_function.zip` via the AWS Console or AWS CLI.
+
+##### Step 3: Configure API Gateway
+
+- Create an HTTP API with a {proxy+} route
+- Attach Lambda integration
+- Deploy and use the public API Gateway URL
+
+
+### Security Considerations
+
+- OAuth credentials stored in AWS Secrets Manager
+- IAM roles restricted with least privilege
+- No long-term user data storage
