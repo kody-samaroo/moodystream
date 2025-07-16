@@ -1,11 +1,10 @@
 import boto3
-import os
-import requests
-import webbrowser
-import threading
-from flask import Flask, request, redirect
 import json
+import requests
+import threading
+import webbrowser
 import spotipy
+from flask import Flask, request, redirect
 
 app = Flask(__name__)
 tokens = {}
@@ -18,7 +17,7 @@ def get_secrets():
     return secret_dict
 
 secrets = get_secrets()
-    
+
 # AWS secrets
 CLIENT_ID = secrets["SPOTIPY_CLIENT_ID"]
 CLIENT_SECRET = secrets["SPOTIPY_CLIENT_SECRET"]
@@ -37,7 +36,7 @@ def login():
     f"&scope={SCOPE}"
     )
 
-    print("🔗 Redirect URI being sent:", REDIRECT_URI)
+    print("Redirect URI being sent:", REDIRECT_URI)
 
     webbrowser.open(auth_url)
 
@@ -46,10 +45,6 @@ def login():
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
-
-    print("🔁 Query string:", request.query_string)
-    print("🔍 All args:", request.args)
-
 
     if not code:
         return "Authorization failed: No code received"
@@ -70,25 +65,27 @@ def callback():
         tokens["refresh_token"] = token_data["refresh_token"]
 
         access_token = tokens["access_token"]
-        print("✅ Access Token:", access_token)
 
-        # 🎧 Step 2: Use Spotipy to access user's profile
         sp = spotipy.Spotify(auth=access_token)
         user_id = sp.current_user()["id"]
-        print("👤 User ID:", user_id)
+        artists = get_top_artists(sp)
+        tracks = []
 
-        # 🛠️ Step 3: Create a playlist
-        sp.user_playlist_create(user=user_id, name="Lambda Test", public=True)
-        print("🎉 Playlist created successfully!")
+        for i, artist in enumerate(artists):
+            artist_id = artist['id']
+            tracks.append(get_artist_top_track(sp, artist_id))
+            tracks.append(get_artist_less_popular_track(sp, artist_id))
 
-        print("Access Token:", tokens["access_token"])
-        print("Refresh Token:", tokens["refresh_token"])
+        playlist = create_playlist(sp, user_id, tracks)
+
+        print("\n Done! Created the following playlist:")
+        print(f"https://open.spotify.com/playlist/{playlist['id']}")
 
     else:
         return f"Token exchange failed. Response: {token_data}"
 
     shutdown_server()
-    return "Authorization complete! You can close this tab."
+    return "Authorization complete!"
 
 def get_token():
     if "access_token" in tokens:
@@ -108,3 +105,34 @@ def run_app():
 if __name__ == "__main__":
     threading.Thread(target=run_app).start()
     webbrowser.open(REDIRECT_URI)
+
+
+# HELPER FUNCTIONS
+def get_top_artists(sp, limit=8, time_range='medium_term'):
+    results = sp.current_user_top_artists(limit=limit, time_range=time_range)
+    artists = []
+    for i, artist in enumerate(results['items']):
+        if artist['name']:
+            artists.append(artist)
+
+    return artists[:8]
+
+def get_artist_top_track(sp, artist_id):
+    results = sp.artist_top_tracks(artist_id=artist_id, country='US')
+    tracks = results['tracks']
+    tracks.sort(reverse=True, key=lambda track: track['popularity'])
+
+    return tracks[0]['uri']
+
+def get_artist_less_popular_track(sp, artist_id):
+    results = sp.artist_top_tracks(artist_id=artist_id, country='US')
+    tracks = results['tracks']
+    tracks.sort(key=lambda track: track['popularity'])
+
+    return tracks[0]['uri']
+
+def create_playlist(sp, user, tracks):
+    playlist = sp.user_playlist_create(user=user, name="A Personal Vibe", public=True, description="Playist made with an automated app. Thanks")
+    sp.user_playlist_add_tracks(user=user, playlist_id=playlist['id'], tracks=tracks, position=None)
+
+    return playlist

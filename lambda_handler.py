@@ -7,34 +7,10 @@ from starlette.middleware.wsgi import WSGIMiddleware
 from server import app
 
 asgi_app = WSGIMiddleware(app)
-handler = Mangum(asgi_app)
+handler = Mangum(asgi_app, lifespan="off")
 
 def lambda_handler(event, context):
     return handler(event, context)
-
-    # Load credentials and create Spotify client
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-        client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-        client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-        redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
-        scope=os.getenv("SCOPE")
-    ))
-
-    # Get current user ID
-    user_id = sp.current_user()["id"]
-
-    # Get top artists and create playlists
-    artists = get_top_artists(sp, limit=3)
-    playlist_ids = create_genre_playlists_from_top_artists(sp, user_id, artists)
-
-    # Return JSON response
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            "message": "Playlists created",
-            "playlist_ids": playlist_ids
-        })
-    }
 
 
 # Helper function: Get top artists
