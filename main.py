@@ -1,8 +1,8 @@
 from dotenv import load_dotenv
 import os
+import random
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-# from server import run_app, get_token
 
 load_dotenv()
 
@@ -22,6 +22,7 @@ def main():
     for i, artist in enumerate(artists):
         artist_id = artist['id']
         tracks.append(get_artist_top_track(artist_id))
+        tracks.append(get_artist_less_popular_track(artist_id))
         tracks.append(get_artist_less_popular_track(artist_id))
 
     playlist = create_playlist(user_id, tracks)
@@ -51,7 +52,9 @@ def get_artist_less_popular_track(artist_id):
     tracks = results['tracks']
     tracks.sort(key=lambda track: track['popularity'])
 
-    return tracks[0]['uri']
+    int_random = random.randint(0, int(len(tracks)/2))
+
+    return tracks[int_random]['uri']
 
 def create_playlist(user, tracks):
     playlist = sp.user_playlist_create(user=user, name="A Personal Vibe", public=True, description="Playist made with an automated app. Thanks")

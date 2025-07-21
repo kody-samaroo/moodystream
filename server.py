@@ -4,6 +4,7 @@ import requests
 import threading
 import webbrowser
 import spotipy
+import random
 from flask import Flask, request, redirect
 
 app = Flask(__name__)
@@ -18,7 +19,6 @@ def get_secrets():
 
 secrets = get_secrets()
 
-# AWS secrets
 CLIENT_ID = secrets["SPOTIPY_CLIENT_ID"]
 CLIENT_SECRET = secrets["SPOTIPY_CLIENT_SECRET"]
 REDIRECT_URI = secrets["SPOTIPY_REDIRECT_URI"]
@@ -27,6 +27,7 @@ SCOPE = "user-top-read playlist-modify-public"
 
 @app.route("/login")
 def login():
+    
 
     auth_url = (
     "https://accounts.spotify.com/authorize"
@@ -73,11 +74,22 @@ def callback():
             artist_id = artist['id']
             tracks.append(get_artist_top_track(sp, artist_id))
             tracks.append(get_artist_less_popular_track(sp, artist_id))
+            tracks.append(get_artist_less_popular_track(sp, artist_id))
 
         playlist = create_playlist(sp, user_id, tracks)
 
         print("\n Done! Created the following playlist:")
         print(f"https://open.spotify.com/playlist/{playlist['id']}")
+
+        return """
+        <html>
+        <head><title>Success!</title></head>
+        <body>
+            <h2>Your playlist is ready!</h2>
+            <p>You are free to close this tab.</p>
+        </body>
+        </html>
+        """
 
     else:
         return f"Token exchange failed. Response: {token_data}"
@@ -102,7 +114,6 @@ def run_app():
 
 if __name__ == "__main__":
     threading.Thread(target=run_app).start()
-    webbrowser.open(REDIRECT_URI)
 
 
 # HELPER FUNCTIONS
@@ -127,7 +138,9 @@ def get_artist_less_popular_track(sp, artist_id):
     tracks = results['tracks']
     tracks.sort(key=lambda track: track['popularity'])
 
-    return tracks[0]['uri']
+    int_random = random.randint(0, int(len(tracks)/2))
+
+    return tracks[int_random]['uri']
 
 def create_playlist(sp, user, tracks):
     playlist = sp.user_playlist_create(user=user, name="A Personal Vibe", public=True, description="Playist made with an automated app. Thanks")
