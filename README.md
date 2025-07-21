@@ -46,6 +46,20 @@ _User → API Gateway → Lambda Function → Spotify API / AWS Secrets Manager_
 
 ## Setup Instructions
 
+### Spotify
+
+Visit `https://developer.spotify.com/`
+
+Log in with Spotify account and navigate to your dashboard
+
+Click "Create app"
+
+Fill out "App name", "App description" and add `http://127.0.0.1:8888/callback` to the "Redirect URI"
+
+Check "Web API" box and agree to the terms
+
+Once you have created the app you can see you **Client ID** and **Client Secret**
+
 ### Local
 
 
@@ -72,39 +86,6 @@ Run application:
 ```
 python main.py
 ```
-
-### Cloud (AWS Lambda)
-
-##### Step 1: Upload Secrets to AWS Secrets Manager
-Secret Name: `moodystream/spotify`
-
-Keys:
-
-- `SPOTIPY_CLIENT_ID`
-- `SPOTIPY_CLIENT_SECRET`
-- `SPOTIPY_REDIRECT_URI`
-
-##### Step 2: Package and Deploy
-
-Install Python packages locally:
-```
-pip install -r requirements.txt -t ./package
-```
-
-Package your app:
-```
-cd package
-zip -r9 ../lambda_function.zip .
-```
-
-Upload `lambda_function.zip` via the AWS Console or AWS CLI.
-
-##### Step 3: Configure API Gateway
-
-- Create an HTTP API with a {proxy+} route
-- Attach Lambda integration
-- Deploy and use the public API Gateway URL
-
 
 ### Security Considerations
 
