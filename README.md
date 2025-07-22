@@ -13,7 +13,7 @@ MoodyStream is a cloud-native web application that generates Spotify playlists b
 
 ## Architecture Diagram
 
-![alt text](image.png)
+![alt text](diagram.png)
 _User → API Gateway → Lambda Function → Spotify API / AWS Secrets Manager_
 
 
