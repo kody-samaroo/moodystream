@@ -4,7 +4,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from mangum import Mangum
 from starlette.middleware.wsgi import WSGIMiddleware
-from server import app
+from src.server import app
 
 asgi_app = WSGIMiddleware(app)
 handler = Mangum(asgi_app, lifespan="off")

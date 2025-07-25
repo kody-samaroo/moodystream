@@ -97,13 +97,6 @@ def callback():
     shutdown_server()
     return "Authorization complete!"
 
-def get_token():
-    if "access_token" in tokens:
-        return tokens["access_token"]
-    else:
-        print(f"Missing access token in the tokens dictionary.")
-        return None
-
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
