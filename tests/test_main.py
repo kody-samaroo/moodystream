@@ -1,4 +1,4 @@
-from src.server import get_top_artists
+from src.main import get_top_artists
 from unittest.mock import MagicMock
 
 def test_get_top_artists():
